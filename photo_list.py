@@ -8,7 +8,6 @@ import json
 from xml.etree.ElementTree import tostring
 from os import listdir
 from os.path import isfile, join
-import subprocess
 from itertools import izip
 
 
