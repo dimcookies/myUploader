@@ -36,7 +36,6 @@ def flickrAuthenticate():
     print "Auth success"
 
 def upload(fn):
-    return "test"
     rsp = flickr.upload(filename=fn)
     #print tostring(rsp)
     status = rsp.attrib['stat'] #ok
