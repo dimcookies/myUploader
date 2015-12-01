@@ -11,8 +11,8 @@ from os.path import isfile, join
 from itertools import izip
 import yaml
 
-
-CONFIG = yaml.load(open(os.path.dirname(os.path.realpath(__file__)) + "/properties"))
+BASE_PATH = os.path.dirname(os.path.realpath(__file__))
+CONFIG = yaml.load(open(BASE_PATH + "/properties.yml"))
 API_KEY = CONFIG['api_key']
 API_SECRET = CONFIG['api_secret']
 
@@ -63,27 +63,8 @@ def resizeImage(file, cnt, group, dirPath):
 
     return group + str(cnt) + ".jpg", group + str(cnt) + "_t.jpg"
 
-template = u"""
-<p>Ακολουθεί το δελτίο τύπου που εξέδωσε ο Ε.Ο.Σ. Χαλκίδας για την εξόρμηση %(title)s:</p>
-<blockquote>
-%(main)s
-</blockquote>
-<p><span style="line-height: 1.3em;">%(next)s Περισσότερες πληροφορίες Τρίτη &amp; Πέμπτη 18-21 μ.μ στα γραφεία του Συλλόγου Αγγελή Γοβιού 22. τηλ 2221025230</span></p>
-<table style="width: 100%%;" border="0" cellspacing="15" cellpadding="15">
-<tbody>
-%(images)s
-</tbody>
-</table>
-"""
-
-two_images = """
-<tr>
-<td style="padding: 10px;"><a class="jcepopup" href="%s" target="_blank" rel="title[%s];caption[%s];group[%s]"> <img src="%s" border="0" alt="" title="" width="350" style="border-radius: 10px; border: 5px solid #fff; -webkit-transform: rotate(-2deg); -moz-transform: rotate(-2deg);" /> </a></td>
-<td style="padding: 10px;"><a class="jcepopup" href="%s" target="_blank" rel="title[%s];caption[%s];group[%s]"> <img src="%s" border="0" alt="" title="" width="350" style="border-radius: 10px; border: 5px solid #fff; -webkit-transform: rotate(2deg); -moz-transform: rotate(2deg);" /> </a></td>
-</tr>
-"""
-
-one_image = """<td style="padding: 10px;" %(extra_style)s><a class="jcepopup" href="%(img)s" target="_blank" rel="title[%(title)s];caption[%(title)s];group[%(group)s]"> <img src="%(thumb)s" border="0" alt="" title="" width="350" style="border-radius: 10px; border: 5px solid #fff; -webkit-transform: rotate(%(rot)sdeg); -moz-transform: rotate(%(rot)sdeg);" /> </a></td>"""
+template = open(BASE_PATH + "/templates/article_template.html").read().decode("utf8")
+one_image = open(BASE_PATH + "/templates/one_image.html").read()
 
 title = argv[2].decode('UTF-8')
 group = unicode(argv[3])
