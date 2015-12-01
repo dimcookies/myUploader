@@ -9,12 +9,12 @@ from xml.etree.ElementTree import tostring
 from os import listdir
 from os.path import isfile, join
 from itertools import izip
+import yaml
 
 
-
-props=open(os.path.dirname(os.path.realpath(__file__)) + "/properties").readlines()
-API_KEY = props[0].strip()
-API_SECRET = props[1].strip()
+CONFIG = yaml.load(open(os.path.dirname(os.path.realpath(__file__)) + "/properties"))
+API_KEY = CONFIG['api_key']
+API_SECRET = CONFIG['api_secret']
 
 if len(argv) != 4:
 	print "python ~/photo_list.py /tmp/directory Δίρφυ dirfi2014"
