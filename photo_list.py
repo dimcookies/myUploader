@@ -10,6 +10,7 @@ from os import listdir
 from os.path import isfile, join
 from itertools import izip
 import yaml
+import threading
 
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 CONFIG = yaml.load(open(BASE_PATH + "/properties.yml"))
@@ -63,26 +64,9 @@ def resizeImage(file, cnt, group, dirPath):
 
     return group + str(cnt) + ".jpg", group + str(cnt) + "_t.jpg"
 
-template = open(BASE_PATH + "/templates/article_template.html").read().decode("utf8")
-one_image = open(BASE_PATH + "/templates/one_image.html").read()
-
-title = argv[2].decode('UTF-8')
-group = unicode(argv[3])
-dirPath = argv[1]
-
-#unzip zip files
-zips = filter(lambda f: isfile(join(dirPath,f)) and f.lower().find("zip") == (len(f)-3) ,listdir(dirPath))
-for zipFile in zips:
- os.system("unzip " + zipFile)
-# os.system("rm " + zipFile)
-
-ar = []
-
-#if images already been uploaded
-if os.path.isfile("image_urls.txt"):
-	urlFile = open("image_urls.txt")
-	ar = filter(lambda x:x ,map(lambda l:l.strip(),urlFile.readlines()))
-else:
+def uploadFiles(dirPath, group):
+	global ar
+	print "Start image resize"
 	convFiles = []
 	#get images and convert to utf8
 	files = map(lambda file: file.decode("utf-8"), filter(lambda f: isfile(join(dirPath,f)) and f.lower().find("jpg") == (len(f)-3) ,listdir(dirPath)))
@@ -94,8 +78,9 @@ else:
 		print file
 		#resize and add to upload list
 		convFiles.extend(resizeImage(file, cnt, group, dirPath))
-
+	print "Done image resize"
 	if convFiles:
+		print "Start image uploading"
 		#single authentication
 		flickrAuthenticate()
 		for i in convFiles:
@@ -109,6 +94,39 @@ else:
 				os.system("rm " + i)
 		#write cache file				
 		writeImageCacheFile(ar)
+		print "Uploading completed"
+
+def pairwise(iterable):
+    "s -> (s0,s1), (s2,s3), (s4, s5), ..."
+    a = iter(iterable)
+    return izip(a, a)
+
+template = open(BASE_PATH + "/templates/article_template.html").read().decode("utf8")
+one_image = open(BASE_PATH + "/templates/one_image.html").read()
+
+title = argv[2].decode('UTF-8')
+group = unicode(argv[3])
+dirPath = argv[1]
+
+#unzip zip files
+zips = filter(lambda f: isfile(join(dirPath,f)) and f.lower().find("zip") == (len(f)-3) ,listdir(dirPath))
+for zipFile in zips:
+ os.system("unzip " + zipFile)
+# os.system("rm " + zipFile)
+
+#array of article images
+ar = []
+
+#upload thread
+t = None
+
+#if images already been uploaded
+if os.path.isfile("image_urls.txt"):
+	urlFile = open("image_urls.txt")
+	ar = filter(lambda x:x ,map(lambda l:l.strip(),urlFile.readlines()))
+else:
+	t = threading.Thread(target=uploadFiles, args=(dirPath, group))
+	t.start()
 
 #docs = [ f for f in listdir(argv[1]) if (isfile(join(argv[1],f)) and (f.lower().find("doc") == (len(f)-3) or f.lower().find("docx") == (len(f)-4))) ]
 docs = filter(lambda f: isfile(join(dirPath,f)) and (f.lower().find("doc") == (len(f)-3) or f.lower().find("docx") == (len(f)-4)) ,listdir(dirPath))
@@ -148,6 +166,14 @@ for line in filter(lambda y:len(y) >0 , map(lambda x: x.strip(),f1.readlines()))
 			flag=True
 			content.append(line)
 
+#wait for images resize and uploading
+if t:
+	print "Waiting for upload thread"
+	t.join()
+	print "Done upload thread"
+
+
+
 print content[0]
 print 
 contentTitle = content[0].replace("Εξόρμηση του Ορειβατικού Συλλόγου Χαλκίδας","").strip().decode("UTF-8")
@@ -161,11 +187,6 @@ os.system("rm \"" + txtFile+"\"");
 
 #ar.sort()	
 #print ar
-
-def pairwise(iterable):
-    "s -> (s0,s1), (s2,s3), (s4, s5), ..."
-    a = iter(iterable)
-    return izip(a, a)
 
 images = ""
 single_image = ((len(ar)/2)%2  == 1)
