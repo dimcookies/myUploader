@@ -49,10 +49,9 @@ def upload(fn):
         raise Exception(fn + " upload failed with response " + tostring(rsp))
 
 def writeImageCacheFile(ar):
-    urlFile = open("image_urls.txt","w")
-    for i in ar:
-        urlFile.write(i + "\n")
-    urlFile.close()
+    with open("image_urls.txt","w") as urlFile:
+			for i in ar:
+					urlFile.write(i + "\n")
 
 def resizeImage(file, cnt, group, dirPath):
     #main image
@@ -122,8 +121,8 @@ t = None
 
 #if images already been uploaded
 if os.path.isfile("image_urls.txt"):
-	urlFile = open("image_urls.txt")
-	ar = filter(lambda x:x ,map(lambda l:l.strip(),urlFile.readlines()))
+	with open("image_urls.txt") as urlFile:
+		ar = filter(lambda x:x ,map(lambda l:l.strip(),urlFile.readlines()))
 else:
 	t = threading.Thread(target=uploadFiles, args=(dirPath, group))
 	t.start()
@@ -147,24 +146,24 @@ os.system("killall -9 oosplash")
 os.system("killall -9 soffice.bin")
 os.system("libreoffice --norestore --headless --convert-to txt:Text \"" + join(dirPath,docs[0]) + "\"")
 
-txtFile = docs[0].split(".")[0]+".txt"
-f1=open(txtFile)
 
 flag = False
 content = []
 
-for line in filter(lambda y:len(y) >0 , map(lambda x: x.strip(),f1.readlines())):
-#	print line
-	if flag:
-		content.append(line)
-		if line.find("www.eoschalkidas.gr") != -1:
-			break
-	else:
-		if line.find("-"*10) != -1:
-			flag = True		
-		elif line.find("Ορειβατικού Συλλόγου Χαλκίδας") != -1:
-			flag=True
+txtFile = docs[0].split(".")[0]+".txt"
+with open(txtFile) as f1:
+	for line in filter(lambda y:len(y) >0 , map(lambda x: x.strip(),f1.readlines())):
+		#	print line
+		if flag:
 			content.append(line)
+			if line.find("www.eoschalkidas.gr") != -1:
+				break
+		else:
+			if line.find("-"*10) != -1:
+				flag = True		
+			elif line.find("Ορειβατικού Συλλόγου Χαλκίδας") != -1:
+				flag=True
+				content.append(line)
 
 #wait for images resize and uploading
 if t:
